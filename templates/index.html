@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Groq AI Chatbot</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f0f0f;color:#e8e8e8;height:100vh;display:flex;flex-direction:column}
+
+    header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:#161616;border-bottom:1px solid #2a2a2a;flex-shrink:0}
+    .header-left{display:flex;align-items:center;gap:10px}
+    .logo{width:34px;height:34px;background:linear-gradient(135deg,#f55036,#f5a623);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+    header h1{font-size:15px;font-weight:600;color:#fff}
+    header p{font-size:12px;color:#666;margin-top:1px}
+
+    .memory-badge{display:flex;align-items:center;gap:6px;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:20px;padding:5px 12px;font-size:12px;color:#888}
+    .dot{width:7px;height:7px;border-radius:50%;background:#f5a623;animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+    #chat{flex:1;overflow-y:auto;padding:24px 20px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}
+    #chat::-webkit-scrollbar{width:4px}
+    #chat::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:2px}
+
+    .msg{display:flex;gap:10px;max-width:82%;animation:fadeIn .2s ease}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    .msg.user{align-self:flex-end;flex-direction:row-reverse}
+    .msg.bot{align-self:flex-start}
+
+    .avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600}
+    .msg.user .avatar{background:#f55036;color:#fff}
+    .msg.bot .avatar{background:#1e1e1e;border:1px solid #2a2a2a;color:#f5a623}
+
+    .bubble{padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.65;max-width:100%}
+    .msg.user .bubble{background:#f55036;color:#fff;border-bottom-right-radius:4px}
+    .msg.bot .bubble{background:#1a1a1a;border:1px solid #252525;color:#e0e0e0;border-bottom-left-radius:4px}
+    .bubble.streaming::after{content:'▋';color:#f5a623;animation:blink .7s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+    .typing{display:flex;align-items:center;gap:5px;padding:10px 14px}
+    .typing span{width:7px;height:7px;border-radius:50%;background:#333;animation:bounce .9s infinite}
+    .typing span:nth-child(2){animation-delay:.15s}
+    .typing span:nth-child(3){animation-delay:.3s}
+    @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+    .welcome{margin:auto;text-align:center;padding:2rem;max-width:360px}
+    .welcome .icon{font-size:48px;margin-bottom:12px}
+    .welcome h2{font-size:18px;color:#fff;margin-bottom:8px}
+    .welcome p{font-size:13px;color:#666;line-height:1.6}
+    .suggestions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px}
+    .sug-btn{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:20px;padding:6px 14px;font-size:12px;color:#aaa;cursor:pointer;transition:all .15s}
+    .sug-btn:hover{background:#222;border-color:#f55036;color:#fff}
+
+    .speed-bar{display:flex;align-items:center;gap:6px;padding:6px 20px;background:#161616;border-top:1px solid #1e1e1e;font-size:11px;color:#555;flex-shrink:0}
+    .speed-bar span{color:#f5a623;font-weight:500}
+
+    #memory-panel{background:#161616;border-top:1px solid #2a2a2a;padding:10px 20px;display:none;font-size:12px;color:#666;max-height:140px;overflow-y:auto}
+    #memory-panel.open{display:block}
+    #memory-panel h3{color:#f5a623;margin-bottom:6px;font-size:12px;font-weight:600}
+    .memory-item{padding:3px 0;border-bottom:1px solid #1e1e1e}
+    .memory-item .role{color:#f55036;margin-right:6px}
+
+    .input-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;background:#161616;border-top:1px solid #2a2a2a;flex-shrink:0}
+    #msg-input{flex:1;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:24px;padding:10px 16px;font-size:14px;color:#e8e8e8;outline:none;font-family:inherit;resize:none;max-height:120px;transition:border-color .15s}
+    #msg-input:focus{border-color:#f55036}
+    #msg-input::placeholder{color:#444}
+
+    .icon-btn{width:38px;height:38px;border-radius:50%;border:1px solid #2a2a2a;background:#1e1e1e;color:#888;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s;flex-shrink:0}
+    .icon-btn:hover{background:#252525;color:#fff}
+
+    #send-btn{width:38px;height:38px;border-radius:50%;border:none;background:#f55036;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s;flex-shrink:0}
+    #send-btn:hover{background:#d94530}
+    #send-btn:disabled{background:#2a2a2a;color:#555;cursor:not-allowed}
+
+    .model-tag{background:#1e1e1e;border:1px solid #2a2a2a;border-radius:20px;padding:4px 10px;font-size:11px;color:#f5a623}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo">⚡</div>
+    <div>
+      <h1>Groq AI Chatbot</h1>
+      <p>Llama 3.3 70B · Free & Ultra Fast</p>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="model-tag">llama-3.3-70b</span>
+    <div class="memory-badge">
+      <div class="dot"></div>
+      <span id="memory-count">0 turns remembered</span>
+    </div>
+    <button class="icon-btn" title="View memory" onclick="toggleMemory()">🧠</button>
+    <button class="icon-btn" title="Clear chat" onclick="clearChat()">🗑️</button>
+  </div>
+</header>
+
+<div id="memory-panel">
+  <h3>💾 Conversation Memory</h3>
+  <div id="memory-list"></div>
+</div>
+
+<div id="chat">
+  <div class="welcome" id="welcome">
+    <div class="icon">⚡</div>
+    <h2>Groq AI Chatbot with Memory</h2>
+    <p>Powered by Llama 3.3 70B on Groq — 100% free and blazing fast. I remember everything in this session!</p>
+    <div class="suggestions">
+      <button class="sug-btn" onclick="sendSuggestion(this)">My name is Alex, remember it!</button>
+      <button class="sug-btn" onclick="sendSuggestion(this)">Explain deep learning simply</button>
+      <button class="sug-btn" onclick="sendSuggestion(this)">Write a Python function for sorting</button>
+      <button class="sug-btn" onclick="sendSuggestion(this)">Tell me a fun AI fact</button>
+    </div>
+  </div>
+</div>
+
+<div class="speed-bar">
+  ⚡ Groq LPU — avg response speed: <span id="speed-display">—</span> tokens/sec
+</div>
+
+<div class="input-bar">
+  <textarea id="msg-input" rows="1" placeholder="Type a message..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+  <button id="send-btn" onclick="sendMessage()" title="Send">➤</button>
+</div>
+
+<script>
+const SESSION_ID = 'sess_' + Math.random().toString(36).slice(2);
+let isStreaming = false;
+
+function autoResize(el){
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,120)+'px';
+}
+function handleKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}
+}
+function sendSuggestion(btn){
+  document.getElementById('msg-input').value=btn.textContent;
+  sendMessage();
+}
+function removeWelcome(){
+  document.getElementById('welcome')?.remove();
+}
+function appendMessage(role,text=''){
+  removeWelcome();
+  const chat=document.getElementById('chat');
+  const div=document.createElement('div');
+  div.className=`msg ${role}`;
+  const av=document.createElement('div');
+  av.className='avatar';
+  av.textContent=role==='user'?'U':'⚡';
+  const bubble=document.createElement('div');
+  bubble.className='bubble';
+  bubble.textContent=text;
+  div.append(av,bubble);
+  chat.appendChild(div);
+  chat.scrollTop=chat.scrollHeight;
+  return bubble;
+}
+function showTyping(){
+  removeWelcome();
+  const chat=document.getElementById('chat');
+  const div=document.createElement('div');
+  div.className='msg bot';div.id='typing-indicator';
+  const av=document.createElement('div');av.className='avatar';av.textContent='⚡';
+  const bubble=document.createElement('div');bubble.className='bubble';
+  bubble.innerHTML='<div class="typing"><span></span><span></span><span></span></div>';
+  div.append(av,bubble);chat.appendChild(div);
+  chat.scrollTop=chat.scrollHeight;
+}
+function removeTyping(){document.getElementById('typing-indicator')?.remove();}
+
+async function sendMessage(){
+  if(isStreaming)return;
+  const input=document.getElementById('msg-input');
+  const text=input.value.trim();
+  if(!text)return;
+  input.value='';input.style.height='auto';
+  document.getElementById('send-btn').disabled=true;
+  isStreaming=true;
+
+  appendMessage('user',text);
+  showTyping();
+
+  const startTime=Date.now();
+  let tokenCount=0;
+
+  try{
+    const res=await fetch('/api/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message:text,session_id:SESSION_ID})
+    });
+    if(!res.ok){removeTyping();appendMessage('bot','⚠️ Server error. Is Flask running?');return;}
+
+    removeTyping();
+    const bubble=appendMessage('bot');
+    bubble.classList.add('streaming');
+    bubble.textContent='';
+
+    const reader=res.body.getReader();
+    const decoder=new TextDecoder();
+    let buf='';
+
+    while(true){
+      const{done,value}=await reader.read();
+      if(done)break;
+      buf+=decoder.decode(value,{stream:true});
+      const lines=buf.split('\n');
+      buf=lines.pop();
+      for(const line of lines){
+        if(!line.startsWith('data:'))continue;
+        const data=line.slice(5).trim();
+        try{
+          const json=JSON.parse(data);
+          if(json.token!==undefined){
+            bubble.textContent+=json.token;
+            tokenCount+=json.token.split(' ').length;
+            document.getElementById('chat').scrollTop=999999;
+          }
+          if(json.done){
+            bubble.classList.remove('streaming');
+            document.getElementById('memory-count').textContent=json.memory_turns+' turns remembered';
+            const elapsed=(Date.now()-startTime)/1000;
+            const tps=Math.round(tokenCount/elapsed);
+            document.getElementById('speed-display').textContent=tps+' tokens/sec';
+          }
+        }catch{}
+      }
+    }
+  }catch(err){
+    removeTyping();
+    appendMessage('bot','⚠️ Cannot connect. Make sure Flask is running: python app.py');
+  }finally{
+    isStreaming=false;
+    document.getElementById('send-btn').disabled=false;
+    document.getElementById('msg-input').focus();
+  }
+}
+
+async function clearChat(){
+  if(!confirm('Clear conversation and memory?'))return;
+  await fetch('/api/clear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:SESSION_ID})});
+  location.reload();
+}
+
+async function toggleMemory(){
+  const panel=document.getElementById('memory-panel');
+  panel.classList.toggle('open');
+  if(!panel.classList.contains('open'))return;
+  const res=await fetch('/api/memory?session_id='+SESSION_ID);
+  const data=await res.json();
+  const list=document.getElementById('memory-list');
+  if(!data.messages.length){list.innerHTML='<div class="memory-item" style="color:#555">No messages yet</div>';return;}
+  list.innerHTML=data.messages.map(m=>`
+    <div class="memory-item">
+      <span class="role">${m.role==='user'?'👤':'⚡'} ${m.role}:</span>
+      ${m.content.slice(0,100)}${m.content.length>100?'…':''}
+    </div>`).join('');
+}
+</script>
+</body>
+</html>
