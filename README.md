@@ -59,3 +59,8 @@ groq-chatbot/
 ## 🤖 Model Used
 **llama-3.3-70b-versatile** — Meta's powerful 70B model running on Groq's LPU hardware.
 Free tier allows: 6,000 requests/day · 500,000 tokens/day
+
+## 🌐 Live Demo
+👉 **Try it now:** https://groq-chatbot-gxdl.onrender.com
+
+---
