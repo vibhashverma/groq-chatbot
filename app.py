@@ -37,7 +37,7 @@ def chat():
     })
  
     response = client.chat.completions.create(
-        model="gemma2-9b-it",
+        model="llama-3.1-8b-instant",
         messages=[{"role": "system", "content": SYSTEM_PROMPT}] + conversations[session_id],
         max_tokens=1024
     )
