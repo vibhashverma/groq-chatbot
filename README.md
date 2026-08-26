@@ -1,6 +1,6 @@
-# ⚡ Groq AI Chatbot with Memory
-A blazing-fast AI chatbot powered by **Groq** (FREE) using Llama 3.3 70B model.
-Built with Python (Flask) + Groq API + real-time streaming.
+# ✨ Gemini AI Chatbot with Memory
+A fast AI chatbot powered by **Google Gemini** using the Gemini 3.6 Flash model.
+Built with Python (Flask) + Gemini API.
 
 ---
 
@@ -8,15 +8,22 @@ Built with Python (Flask) + Groq API + real-time streaming.
 
 ### Step 1 — Install dependencies
 ```cmd
-pip install flask groq
+pip install flask google-genai
 ```
 
-### Step 2 — Set your FREE Groq API key
+### Step 2 — Set your Gemini API key and model
 ```cmd
-set GROQ_API_KEY=your_groq_key_here
+set GEMINI_API_KEY=your_gemini_key_here
+set GEMINI_MODEL=gemini-3.6-flash
 ```
-> 🔑 Get your FREE key at: https://console.groq.com
-> Sign up → API Keys → Create API Key (takes 1 minute)
+> 🔑 Get your key at: https://aistudio.google.com/apikey
+> Sign in with your Google account → Create API Key (takes 1 minute)
+
+You can also put these in a `.env` file:
+```dotenv
+GEMINI_API_KEY=your_gemini_key_here
+GEMINI_MODEL=gemini-3.6-flash
+```
 
 ### Step 3 — Run the app
 ```cmd
@@ -34,11 +41,9 @@ http://localhost:5000
 
 | Feature | Description |
 |---|---|
-| ⚡ Ultra Fast | Groq LPU delivers 500+ tokens/sec |
+| ⚡ Fast | Powered by Gemini 3.6 Flash |
 | 🧠 Memory | Remembers full conversation history |
-| 📡 Streaming | Real-time token-by-token responses |
-| 🆓 100% Free | Groq free tier — no credit card needed |
-| 📊 Speed meter | Live tokens/sec display |
+| 📊 Speed meter | Live turns-remembered display |
 | 🗑️ Clear memory | Reset and start fresh anytime |
 
 ---
@@ -46,7 +51,7 @@ http://localhost:5000
 ## 📁 Project Structure
 
 ```
-groq-chatbot/
+gemini-chatbot/
 ├── app.py              ← Flask backend
 ├── requirements.txt    ← Dependencies
 ├── README.md           ← This file
@@ -57,10 +62,6 @@ groq-chatbot/
 ---
 
 ## 🤖 Model Used
-**llama-3.3-70b-versatile** — Meta's powerful 70B model running on Groq's LPU hardware.
-Free tier allows: 6,000 requests/day · 500,000 tokens/day
-
-## 🌐 Live Demo
-👉 **Try it now:** https://groq-chatbot-gxdl.onrender.com
+**gemini-3.6-flash** — Google's Gemini model, configurable via the `GEMINI_MODEL` environment variable.
 
 ---
