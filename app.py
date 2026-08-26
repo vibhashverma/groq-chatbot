@@ -87,4 +87,5 @@ if __name__ == "__main__":
     else:
         print("\n🤖 Groq AI Chatbot with Memory is running!")
         print("👉 Open http://localhost:5000 in your browser\n")
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
