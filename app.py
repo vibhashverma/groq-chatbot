@@ -5,7 +5,6 @@ import os
 app = Flask(__name__)
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
  
-# In-memory conversation store: { session_id: [messages] }
 conversations = {}
  
 SYSTEM_PROMPT = """You are a helpful, friendly, and intelligent AI assistant with memory.
@@ -21,40 +20,44 @@ def index():
  
 @app.route("/api/chat", methods=["POST"])
 def chat():
-    data = request.json
-    session_id = data.get("session_id", "default")
-    user_message = data.get("message", "").strip()
+    try:
+        data = request.json
+        session_id = data.get("session_id", "default")
+        user_message = data.get("message", "").strip()
  
-    if not user_message:
-        return jsonify({"error": "Empty message"}), 400
+        if not user_message:
+            return jsonify({"error": "Empty message"}), 400
  
-    if session_id not in conversations:
-        conversations[session_id] = []
+        if session_id not in conversations:
+            conversations[session_id] = []
  
-    conversations[session_id].append({
-        "role": "user",
-        "content": user_message
-    })
+        conversations[session_id].append({
+            "role": "user",
+            "content": user_message
+        })
  
-    response = client.chat.completions.create(
-        model="meta-llama/llama-4-scout-17b-16e-instruct",
-        messages=[{"role": "system", "content": SYSTEM_PROMPT}] + conversations[session_id],
-        max_tokens=1024
-    )
+        response = client.chat.completions.create(
+            model="meta-llama/llama-4-scout-17b-16e-instruct",
+            messages=[{"role": "system", "content": SYSTEM_PROMPT}] + conversations[session_id],
+            max_tokens=1024
+        )
  
-    reply = response.choices[0].message.content
+        reply = response.choices[0].message.content
  
-    conversations[session_id].append({
-        "role": "assistant",
-        "content": reply
-    })
+        conversations[session_id].append({
+            "role": "assistant",
+            "content": reply
+        })
  
-    memory_count = len(conversations[session_id]) // 2
-    return jsonify({
-        "token": reply,
-        "done": True,
-        "memory_turns": memory_count
-    })
+        memory_count = len(conversations[session_id]) // 2
+        return jsonify({
+            "token": reply,
+            "done": True,
+            "memory_turns": memory_count
+        })
+ 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
  
  
 @app.route("/api/clear", methods=["POST"])
@@ -76,11 +79,5 @@ def memory():
  
  
 if __name__ == "__main__":
-    if not os.environ.get("GROQ_API_KEY"):
-        print("\n❌ ERROR: GROQ_API_KEY not set!")
-        print("Run this first: set GROQ_API_KEY=your_key_here\n")
-    else:
-        print("\n🤖 Groq AI Chatbot with Memory is running!")
-        print("👉 Open http://localhost:5000 in your browser\n")
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
